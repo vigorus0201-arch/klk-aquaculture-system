@@ -1,10 +1,29 @@
 /* global React, ReactDOM, AQUA_DATA, Sidebar, Topbar, PageHeader, TankDrawer,
    OverviewPage, EnvironmentPage, WorkflowPage, DevicesPage, MonitoringPage,
    AnalyticsPage, ReportsPage, SettingsPage, ManualLogsPage,
-   AnalyticsPageFull, ReportsPageFull, SettingsPageFull */
+   AnalyticsPageFull, ReportsPageFull, SettingsPageFull, MonitoringMobile */
 const { useState: useStateApp, useEffect: useEffectApp } = React;
 
+// Mobile detection (window.innerWidth < 768)
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useStateApp(
+    typeof window !== 'undefined' && window.innerWidth < 768
+  );
+  useEffectApp(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return isMobile;
+}
+
 function App() {
+  // Mobile bypass — render MonitoringMobile and skip desktop layout entirely
+  const isMobile = useIsMobile();
+  if (isMobile && window.MonitoringMobile) {
+    return <MonitoringMobile />;
+  }
+
   const [active, setActive] = useStateApp('overview');
   const [sub, setSub] = useStateApp('all'); // monitoring sub-nav
   const [selectedTank, setSelectedTank] = useStateApp('B2');
