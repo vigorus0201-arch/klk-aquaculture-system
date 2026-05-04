@@ -7,39 +7,82 @@ const DANGER_BG_TEXT = {
   info:   { zh: '通知', en: 'NOTICE' },
 };
 
+/* ============================================================
+   AlertBanner (KLK v0.2 — Critical Banner redesign)
+   ─ Height 64px · 3 sections · #7f1d1d deep red bg · 18px desc
+   ============================================================ */
 function AlertBanner({ alerts, onTank }) {
   const critical = alerts.filter(a => a.sev === 'danger' && !a.ack);
   if (critical.length === 0) return null;
   const top = critical[0];
-  const tank = (window.AQUA_DATA.TANKS || []).find(t => t.id === top.tank);
-  const titleZh = {
-    'Dissolved Oxygen critical': '溶氧過低 / Low DO',
-    'Mortality spike (24h)': '斃死數異常 / Mortality Spike',
-    'Temperature trending high': '水溫過高 / High Temp',
-    'pH below safe range': 'pH 偏低 / Low pH',
-  }[top.title] || top.title;
+
+  const STAGE_NAME = { INC:'孵化池', NUR:'小魚池', JUV:'中魚池', GRO:'大魚池', BRO:'親魚池' };
+  const tanks = (window.AQUA_DATA && window.AQUA_DATA.TANKS) || [];
+  const tank = tanks.find(t => t.id === top.tank);
+  let tankLabel = top.tank;
+  if (tank) {
+    const sameStage = tanks.filter(x => x.stage === tank.stage);
+    const idx = sameStage.findIndex(x => x.id === tank.id) + 1;
+    tankLabel = top.tank + '｜' + (STAGE_NAME[tank.stage] || tank.stage) + ' ' + idx;
+  }
+
+  const titleZh = ({
+    'Dissolved Oxygen critical': '溶氧過低',
+    'Mortality spike (24h)':     '斃死數異常',
+    'Temperature trending high': '水溫過高',
+    'pH below safe range':       'pH 偏低',
+  })[top.title] || top.title;
+
   return (
-    <div className="alert-banner">
-      <div className="alert-banner-icon"><Ic name="alert" size={22} /></div>
-      <div className="alert-banner-body">
-        <div className="alert-banner-title">⚠ 緊急警報 · CRITICAL · {top.id}</div>
-        <div className="alert-banner-msg">
-          <span style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>[{top.tank}]</span>{' '}
-          {titleZh}
-        </div>
-        <div className="alert-banner-meta">
-          <span><span style={{ color: 'var(--fg-3)' }}>魚池 TANK</span> <span className="v">{top.tank}{tank ? ` · ${tank.stage}` : ''}</span></span>
-          <span><span style={{ color: 'var(--fg-3)' }}>異常 ISSUE</span> <span className="v">{top.metric}</span></span>
-          <span><span style={{ color: 'var(--fg-3)' }}>當前 NOW</span> <span className="v" style={{ color: 'var(--danger)', fontSize: 14 }}>{top.value} {top.unit}</span></span>
-          <span><span style={{ color: 'var(--fg-3)' }}>閾值 THRES</span> <span className="v">{top.threshold} {top.unit}</span></span>
-          <span><span style={{ color: 'var(--fg-3)' }}>時間 TIME</span> <span className="v">{top.ts}</span> · <span style={{ color: 'var(--warn)' }}>{top.age}</span></span>
-          {critical.length > 1 ? <span style={{ color: 'var(--danger)' }}>+{critical.length - 1} 其他危急 OTHER CRITICAL</span> : null}
-        </div>
+    <div style={{
+      height:64, minHeight:64,
+      background:'#7f1d1d', color:'#ffffff',
+      display:'grid', gridTemplateColumns:'auto 1fr auto',
+      alignItems:'center', gap:20, padding:'0 24px',
+      borderRadius:8, marginBottom:16,
+      boxShadow:'0 2px 8px rgba(127,29,29,0.40)',
+    }}>
+      {/* LEFT: icon + tank label */}
+      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+        <span style={{ fontSize:28, lineHeight:1 }}>🚨</span>
+        <span style={{ fontSize:18, fontWeight:700, color:'#ffffff' }}>
+          {tankLabel}
+        </span>
       </div>
-      <div className="alert-banner-actions">
-        <button className="btn-mini" onClick={() => onTank(top.tank)}>檢視 {top.tank} VIEW</button>
-        <button className="btn-mini btn-danger">啟動緊急曝氣 ENGAGE O₂</button>
-        <button className="btn-mini">確認 ACK</button>
+
+      {/* MIDDLE: problem description (large, prominent) */}
+      <div style={{ display:'flex', alignItems:'baseline', gap:14 }}>
+        <span style={{ fontSize:18, fontWeight:700, color:'#ffffff' }}>
+          {titleZh}
+        </span>
+        <span style={{ fontSize:14, color:'#fecaca', fontFamily:'var(--font-mono)' }}>
+          目前 {top.value} {top.unit} · 閾值 {top.threshold} {top.unit} · {top.age}
+        </span>
+        {critical.length > 1 ? (
+          <span style={{
+            fontSize:13, fontWeight:700, color:'#fecaca',
+            padding:'2px 10px', border:'1px solid #fecaca',
+          }}>+{critical.length - 1} 其他危急</span>
+        ) : null}
+      </div>
+
+      {/* RIGHT: action buttons */}
+      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+        <button onClick={() => onTank && onTank(top.tank)} style={{
+          padding:'8px 16px', fontSize:14, fontWeight:700,
+          background:'#ffffff', color:'#7f1d1d',
+          border:'1px solid #ffffff', cursor:'pointer', borderRadius:4,
+        }}>檢視 VIEW</button>
+        <button style={{
+          padding:'8px 16px', fontSize:14, fontWeight:700,
+          background:'transparent', color:'#ffffff',
+          border:'2px solid #ffffff', cursor:'pointer', borderRadius:4,
+        }}>確認 ACK</button>
+        <button style={{
+          padding:'8px 16px', fontSize:14, fontWeight:700,
+          background:'#fecaca', color:'#7f1d1d',
+          border:'1px solid #fecaca', cursor:'pointer', borderRadius:4,
+        }}>啟動曝氣 ENGAGE</button>
       </div>
     </div>
   );

@@ -2274,39 +2274,66 @@ function MonitoringPage({ sub, selectedTank, setSelectedTank, setDrawerTank }) {
   const allTanks = AQUA_DATA.TANKS;
   const tanks = filterTanksByStage(allTanks, sub);
   const alerts = AQUA_DATA.ALERTS;
-  // Make sure selected tank is in this view
   const selected = tanks.find(t => t.id === selectedTank) ? selectedTank : (tanks[0] && tanks[0].id);
 
-  return (
-    <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <AlertBanner alerts={alerts} onTank={setDrawerTank} />
+  // ─── Click handler: select tank + scroll to detail ───
+  function handleSelect(t) {
+    setSelectedTank(t.id);
+    // Smooth scroll to detail panel
+    setTimeout(() => {
+      const el = document.getElementById('monitor-detail');
+      if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+    }, 60);
+  }
 
-      <div className="row-2">
-        <TankGrid
-          tanks={tanks}
-          selectedId={selected}
-          onSelect={(t) => { setSelectedTank(t.id); setDrawerTank(t.id); }}
-        />
-        <AlertPanel alerts={alerts} onTank={setDrawerTank} />
+  // Sub-stage display name
+  const SUB_NAME = { all:'全部魚池', incubation:'孵化池', nursery:'小魚池', juvenile:'中魚池', growout:'大魚池' };
+  const subName = SUB_NAME[sub] || '全部魚池';
+
+  return (
+    <div className="page-fade" style={{
+      maxWidth:'none', padding:'0 24px',
+      display:'flex', flexDirection:'column', gap:24,
+    }}>
+      {/* ─── H1: Page main title ─── */}
+      <div style={{
+        padding:'8px 0 0',
+      }}>
+        <h1 style={{
+          fontSize:28, fontWeight:700, color:'#ffffff', margin:0, lineHeight:1.2,
+        }}>監控系統</h1>
+        <div style={{
+          fontSize:16, color:'#cbd5e1', marginTop:6,
+        }}>
+          即時水質與池槽狀態 · {subName} · {tanks.length} 池
+        </div>
       </div>
 
-      <MonitorPanel tanks={tanks} selectedId={selected} onSelect={setSelectedTank} />
+      {/* ─── Critical alert banner (full width, always at top) ─── */}
+      <AlertBanner alerts={alerts} onTank={setDrawerTank} />
 
-      {sub === 'all' ? (
-        <>
-          <SciencePanel />
-          {typeof ExperimentPanel !== 'undefined' ? <ExperimentPanel /> : null}
-          <div className="row-2">
-            <LogsPanel />
-            <AnalyticsPanel />
-          </div>
-        </>
-      ) : (
-        <div className="row-2">
-          <LogsPanel />
-          <AnalyticsPanel />
-        </div>
-      )}
+      {/* ─── Tank grid (full width, left-aligned) ─── */}
+      <TankGrid
+        tanks={tanks}
+        selectedId={selected}
+        onSelect={handleSelect}
+      />
+
+      {/* ─── Detail panel (scroll target) ─── */}
+      <div id="monitor-detail">
+        <MonitorPanel tanks={tanks} selectedId={selected} onSelect={setSelectedTank} />
+      </div>
+
+      {/* ─── Bottom: science / logs / analytics (full width stack) ─── */}
+      {sub === 'all' ? <SciencePanel /> : null}
+      {sub === 'all' && typeof ExperimentPanel !== 'undefined' ? <ExperimentPanel /> : null}
+
+      <div style={{
+        display:'grid', gridTemplateColumns:'1fr 1fr', gap:20,
+      }}>
+        <LogsPanel />
+        <AnalyticsPanel />
+      </div>
     </div>
   );
 }

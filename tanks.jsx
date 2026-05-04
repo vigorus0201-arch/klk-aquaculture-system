@@ -646,186 +646,219 @@ function NoWaterPlaceholder() {
 }
 
 // ─── TankCard ────────────────────────────────────────────────
+/* ============================================================
+   TankCard (KLK v0.2 — Monitoring page redesign)
+   ─ Simplified layout: name + status + Temp/DO/pH + reminder + time
+   ─ Bigger title, dark navy bg, clean grid
+   ─ Click → onClick(tank) for parent to scroll to detail panel
+   ============================================================ */
+
+const _NEW_STAGE_NAME = { INC:'孵化池', NUR:'小魚池', JUV:'中魚池', GRO:'大魚池', BRO:'親魚池' };
+const _NEW_COLORS = {
+  ok:        '#22c55e',
+  warn:      '#facc15',
+  danger:    '#ef4444',
+  noData:    '#64748b',
+  textMain:  '#ffffff',
+  textSub:   '#cbd5e1',
+  cardBg:    '#0f172a',
+  cardBorder:'rgba(255,255,255,0.06)',
+};
+
+function _statusLabel(s) {
+  return ({ ok:'正常', warn:'警告', danger:'異常', noData:'無資料' })[s] || '—';
+}
+
+function _MetricCell({ label, value, unit, status, fixed }) {
+  const noData = value == null;
+  const c = noData ? _NEW_COLORS.noData
+          : status === 'danger' ? _NEW_COLORS.danger
+          : status === 'warn'   ? _NEW_COLORS.warn
+          : status === 'ok'     ? _NEW_COLORS.ok
+          : _NEW_COLORS.textMain;
+  return (
+    <div>
+      <div style={{
+        fontSize:11, fontWeight:600, color: _NEW_COLORS.textSub,
+        textTransform:'uppercase', letterSpacing:0.06,
+      }}>{label}</div>
+      <div style={{
+        fontSize:16, fontWeight:700, color: c, marginTop:3,
+        fontFamily:'var(--font-mono)',
+      }}>
+        {noData ? '—' : value.toFixed(fixed != null ? fixed : 1)}
+        {!noData && unit ? <span style={{ fontSize:11, color: _NEW_COLORS.textSub, marginLeft:3, fontWeight:600 }}>{unit}</span> : null}
+      </div>
+    </div>
+  );
+}
+
 function TankCard({ tank, selected, onClick }) {
   const t = tank;
 
-  // Re-render on Settings (standards / responsibility) and Logs change
+  // Subscribe to LogStore + Settings + 60s tick
   _useLogStoreVersion();
   const [, _setSV] = useStateT(0);
   useEffectT(() => {
     if (!window.SettingsStore) return;
     return window.SettingsStore.subscribe(() => _setSV(x => x + 1));
   }, []);
-
-  // 60-second tick: keeps relative times & sampling status fresh
-  const [tickMs, _setTick] = useStateT(Date.now());
+  const [, _setTick] = useStateT(Date.now());
   useEffectT(() => {
     const id = setInterval(() => _setTick(Date.now()), 60000);
     return () => clearInterval(id);
   }, []);
 
-  // ─── Pull latest water log ───
+  // ─── Tank label: "I1｜孵化池 1" ───
+  const stageZh   = _NEW_STAGE_NAME[t.stage] || t.stage;
+  const tanksAll  = (window.AQUA_DATA && window.AQUA_DATA.TANKS) || [];
+  const sameStage = tanksAll.filter(x => x.stage === t.stage);
+  const tankIdx   = sameStage.findIndex(x => x.id === t.id) + 1;
+  const tankLabel = t.id + '｜' + stageZh + ' ' + tankIdx;
+
+  // ─── Latest water log → Temp / DO / pH only ───
   const latestWater = window.LogStore ? window.LogStore.latest('water', t.id) : null;
-  const wd          = latestWater ? latestWater.data : null;
+  const wd  = latestWater ? latestWater.data : null;
   const cTemp = wd && wd.temp != null ? wd.temp : null;
   const cDoO  = wd && wd.doO  != null ? wd.doO  : null;
   const cPh   = wd && wd.ph   != null ? wd.ph   : null;
-  const cNh3  = wd && wd.nh3  != null ? wd.nh3  : null;
-  const cNo2  = wd && wd.no2  != null ? wd.no2  : null;
 
-  // ─── Targets from Settings (per stage) ───
-  const standards = _stdFor(t.stage);
-  const resp      = _respFor(t.id, t.stage);
+  // ─── Status from Settings stageStandards ───
+  const std = window.SettingsStore ? window.SettingsStore.getStageStandards(t.stage) : null;
+  const tempS = std ? _statusRange(cTemp, std.temp, 0.5) : null;
+  const doS   = std ? _statusMin(cDoO, std.doMin, 0.5)   : null;
+  const phS   = std ? _statusRange(cPh, std.ph, 0.2)     : null;
 
-  // ─── Build metric definitions ───
-  const metrics = [
-    {
-      key:'temp', label:'水溫', unit:'°C', fixed:1,
-      value: cTemp, target: standards && standards.temp,
-      targetText: standards ? `${standards.temp[0]}–${standards.temp[1]} °C` : '—',
-      status: standards ? _statusRange(cTemp, standards.temp, 0.5) : null,
-      gap:    standards ? _gapRange(cTemp, standards.temp) : null,
-      always: true,
-    },
-    {
-      key:'doO', label:'溶氧', unit:'mg/L', fixed:1,
-      value: cDoO, target: standards ? standards.doMin : null,
-      targetText: standards ? `≥ ${standards.doMin}` : '—',
-      status: standards ? _statusMin(cDoO, standards.doMin, 0.5) : null,
-      gap:    standards ? _gapMin(cDoO, standards.doMin) : null,
-      always: true,
-    },
-    {
-      key:'ph', label:'pH', unit:'', fixed:2,
-      value: cPh, target: standards && standards.ph,
-      targetText: standards ? `${standards.ph[0]}–${standards.ph[1]}` : '—',
-      status: standards ? _statusRange(cPh, standards.ph, 0.2) : null,
-      gap:    standards ? _gapRange(cPh, standards.ph) : null,
-      always: true,
-    },
-    {
-      key:'nh3', label:'NH₃', unit:'', fixed:2,
-      value: cNh3, target: standards ? standards.nh3Max : null,
-      targetText: standards ? `≤ ${standards.nh3Max}` : '—',
-      status: standards ? _statusMax(cNh3, standards.nh3Max, 0.05) : null,
-      gap:    standards ? _gapMax(cNh3, standards.nh3Max) : null,
-      always: false, // hide if no value
-    },
-    {
-      key:'no2', label:'NO₂', unit:'', fixed:2,
-      value: cNo2, target: standards ? standards.no2Max : null,
-      targetText: standards ? `≤ ${standards.no2Max}` : '—',
-      status: standards ? _statusMax(cNo2, standards.no2Max, 0.10) : null,
-      gap:    standards ? _gapMax(cNo2, standards.no2Max) : null,
-      always: false,
-    },
-  ];
+  // ─── Overall status ───
+  const overall = !latestWater ? 'noData'
+                : (tempS === 'danger' || doS === 'danger' || phS === 'danger') ? 'danger'
+                : (tempS === 'warn'   || doS === 'warn'   || phS === 'warn')   ? 'warn'
+                : 'ok';
+  const overallColor = _NEW_COLORS[overall];
 
-  const visibleMetrics = metrics.filter(m => m.always || m.value != null);
+  // ─── Reminder text ───
+  const reminderText =
+      overall === 'noData' ? '尚無水質資料 — 請補登一筆紀錄'
+    : overall === 'danger' ? '水質異常 — 需立即處理'
+    : overall === 'warn'   ? '接近警戒值 — 請密切觀察'
+    : null;
 
-  // ─── Computed overall status (drives card border) ───
-  const computedStatus = visibleMetrics.reduce((acc, m) => {
-    if (m.status === 'danger') return 'danger';
-    if (m.status === 'warn' && acc !== 'danger') return 'warn';
-    return acc;
-  }, 'ok');
-  const cardStatus = latestWater ? computedStatus : '';
+  const updateText = latestWater ? _relShort(latestWater.recordedAt) : '尚無紀錄';
 
-  // ─── Batch info (from existing data; not changing schema) ───
-  const batch = (window.AQUA_DATA.BATCHES || []).find(x => x.tank === t.id);
+  // ─── Card style ───
+  const cardStyle = {
+    background:    _NEW_COLORS.cardBg,
+    border:        '1px solid ' + _NEW_COLORS.cardBorder,
+    borderLeft:    (overall === 'danger' || overall === 'warn')
+                   ? '4px solid ' + overallColor
+                   : '1px solid ' + _NEW_COLORS.cardBorder,
+    borderRadius:  12,
+    padding:       16,
+    cursor:        'pointer',
+    transition:    'transform 0.15s ease, box-shadow 0.15s ease',
+    display:       'flex',
+    flexDirection: 'column',
+    gap:           12,
+    boxShadow:     selected ? '0 0 0 2px ' + _NEW_COLORS.textMain : 'none',
+  };
 
   return (
-    <div className={`tank-card ${cardStatus} ${selected ? 'selected' : ''}`} onClick={() => onClick(t)}>
-      {/* Head */}
-      <div className="tank-head">
-        <div className="tank-id">
-          {t.id}
-          <span className="sub">{t.stage}</span>
+    <div onClick={() => onClick && onClick(t)}
+         style={cardStyle}
+         onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.40)' + (selected ? ', 0 0 0 2px ' + _NEW_COLORS.textMain : ''); }}
+         onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = selected ? '0 0 0 2px ' + _NEW_COLORS.textMain : 'none'; }}>
+
+      {/* ─── Title + status ─── */}
+      <div>
+        <div style={{ fontSize:16, fontWeight:700, color: _NEW_COLORS.textMain, lineHeight:1.3 }}>
+          {tankLabel}
         </div>
-        {latestWater ? <StatusPill status={cardStatus || 'ok'} /> : <NoDataPill />}
-      </div>
-
-      {/* Meta row: batch + count + responsibility */}
-      <div style={{
-        display:'flex', flexWrap:'wrap', gap:'4px 12px',
-        fontSize:11, color:'var(--fg-0)', padding:'4px 0',
-        borderBottom:'1px dashed var(--line-soft)',
-      }}>
-        {batch ? (
-          <span>批次 <span style={{
-            color:'var(--accent)', fontWeight:600, fontFamily:'var(--font-mono)',
-          }}>{batch.id}</span></span>
-        ) : null}
-        <span>{t.count.toLocaleString()} <span style={{ color:'var(--fg-1)' }}>尾</span></span>
-        {resp && resp.primary ? (
-          <span style={{ marginLeft:'auto' }}>
-            負責 <span style={{ color:'var(--fg-0)', fontWeight:600 }}>{resp.primary.name}</span>
-            {resp.shift ? <span style={{ color:'var(--fg-1)', marginLeft:2 }}>· {resp.shift}</span> : null}
+        <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:4 }}>
+          <span style={{
+            display:'inline-block', width:8, height:8, borderRadius:'50%',
+            background: overallColor,
+          }}></span>
+          <span style={{ fontSize:13, fontWeight:600, color: overallColor }}>
+            {_statusLabel(overall)}
           </span>
-        ) : null}
+        </div>
       </div>
 
-      {/* Latest water indicator */}
-      <WaterLogStrip log={latestWater} />
-
-      {/* Sampling status (per-stage frequency from Settings) */}
-      <SamplingStrip tankId={t.id} stage={t.stage} tickMs={tickMs} />
-
-      {/* Fish count (capacity / current / mortality / survival / length) */}
-      <FishCountStrip tank={t} />
-
-      {/* Transfer suggestion (length vs stageStandards.transferOutCm) */}
-      <TransferStrip tank={t} />
-
-      {/* Current / Target / Gap / Action */}
-      {latestWater ? (
-        <CGTAGrid metrics={visibleMetrics} />
-      ) : (
-        <NoWaterPlaceholder />
-      )}
-
-      {/* Tank fill bar */}
-      <div className="tank-bar" style={{ marginTop: 8 }}>
-        <i style={{ width: `${t.fillPct}%` }}></i>
+      {/* ─── Water quality (Temp / DO / pH only) ─── */}
+      <div style={{
+        display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10,
+        paddingTop:12, borderTop:'1px solid ' + _NEW_COLORS.cardBorder,
+      }}>
+        <_MetricCell label="Temp" value={cTemp} unit="°C"   status={tempS} fixed={1} />
+        <_MetricCell label="DO"   value={cDoO}  unit="mg/L" status={doS}   fixed={1} />
+        <_MetricCell label="pH"   value={cPh}   unit=""     status={phS}   fixed={2} />
       </div>
 
-      {/* Footer */}
-      <div className="tank-foot" style={{ marginTop:6, color:'var(--fg-0)' }}>
-        <span>水位 <span style={{ fontWeight:600 }}>{t.fillPct}%</span></span>
-        <span>今日斃死 <span style={{
-          color: t.mortality >= 20 ? 'var(--danger)' : t.mortality >= 6 ? 'var(--warn)' : 'var(--fg-0)',
-          fontWeight:600,
-        }}>{t.mortality}</span> 尾</span>
-        <span className="biomass" style={{ color:'var(--fg-0)' }}>{t.biomass} kg</span>
-      </div>
+      {/* ─── Reminder area (single, no duplicates) ─── */}
+      {reminderText ? (
+        <div style={{
+          padding:'10px 12px',
+          background:
+              overall === 'danger' ? 'rgba(239,68,68,0.10)'
+            : overall === 'warn'   ? 'rgba(250,204,21,0.10)'
+            : 'rgba(100,116,139,0.10)',
+          border:'1px solid ' + overallColor,
+          borderLeft:'3px solid ' + overallColor,
+          borderRadius:6,
+          fontSize:13, fontWeight:600, color: overallColor,
+        }}>
+          {reminderText}
+        </div>
+      ) : null}
 
-      <SensorStrip tankId={t.id} />
+      {/* ─── Update time (smallest) ─── */}
+      <div style={{
+        fontSize:11, color: _NEW_COLORS.textSub, textAlign:'right', marginTop:'auto',
+      }}>
+        更新：{updateText}
+      </div>
     </div>
   );
 }
 
+/* ============================================================
+   TankGrid (KLK v0.2 — left-aligned, full-width, big title)
+   ─ H2 標題 22px > 卡片 16px
+   ─ Grid: minmax(280px, 1fr), gap 20, justify-content flex-start
+   ============================================================ */
 function TankGrid({ tanks, selectedId, onSelect }) {
   return (
-    <section className="panel tanks-area">
-      <div className="panel-head">
-        <span className="panel-title">魚池總覽 <span style={{ color: 'var(--fg-1)' }}>· TANK OVERVIEW</span> <span className="count">{tanks.length} 池</span></span>
-        <div className="panel-actions">
-          <div className="seg">
-            <button className="active">全部 ALL</button>
-            <button>育成 SMOLT</button>
-            <button>養成 GROW</button>
-            <button>親魚 BROOD</button>
-            <button>檢疫 QUAR</button>
-          </div>
-          <button className="btn-mini"><Ic name="plus" size={11} /> 新增 ADD</button>
-        </div>
+    <section style={{
+      background:'transparent', border:'none', padding:0, margin:0,
+    }}>
+      {/* H2 區塊標題 */}
+      <div style={{
+        display:'flex', alignItems:'baseline', gap:14,
+        padding:'0 0 16px 0', borderBottom:'1px solid rgba(255,255,255,0.08)', marginBottom:20,
+      }}>
+        <h2 style={{
+          fontSize:22, fontWeight:600, color:'#ffffff', margin:0, lineHeight:1.2,
+        }}>魚池總覽</h2>
+        <span style={{
+          fontSize:14, fontWeight:600, color:'#cbd5e1', fontFamily:'var(--font-mono)',
+        }}>{tanks.length} 池</span>
+        <span style={{ flex:1 }} />
+        <span style={{ fontSize:13, color:'#cbd5e1' }}>
+          點擊卡片可檢視詳細圖表
+        </span>
       </div>
-      <div className="panel-body">
-        <div className="tank-grid">
-          {tanks.map(t => (
-            <TankCard key={t.id} tank={t} selected={selectedId === t.id} onClick={onSelect} />
-          ))}
-        </div>
+
+      {/* Cards grid: left-aligned, no centering */}
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))',
+        gap:20,
+        justifyContent:'flex-start',
+        alignContent:'flex-start',
+      }}>
+        {tanks.map(t => (
+          <TankCard key={t.id} tank={t} selected={selectedId === t.id} onClick={onSelect} />
+        ))}
       </div>
     </section>
   );
