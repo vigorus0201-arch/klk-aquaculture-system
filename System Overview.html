@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440, initial-scale=1" />
+<title>系統總覽 · System Overview · CWA</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { overflow: auto; }
+  .ov { max-width: 1280px; margin: 0 auto; padding: 28px 32px 60px; }
+  .ov-hero {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    padding: 32px;
+    display: grid; grid-template-columns: 1.6fr 1fr; gap: 28px;
+    margin-bottom: 24px;
+  }
+  .ov-eyebrow {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ov-eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--accent); }
+  .ov-title-zh { font-size: 38px; font-weight: 600; letter-spacing: 0.02em; line-height: 1.1; }
+  .ov-title-en { font-family: var(--font-mono); font-size: 18px; color: var(--fg-2); margin-top: 10px; letter-spacing: 0.04em; }
+  .ov-lede { color: var(--fg-1); font-size: 14px; line-height: 1.7; margin-top: 18px; max-width: 56ch; }
+  .ov-keyfacts { display: grid; grid-template-columns: 1fr 1fr; gap: 0; align-self: end; border: 1px solid var(--line-soft); }
+  .ov-keyfacts > div {
+    padding: 14px 16px;
+    border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft);
+  }
+  .ov-keyfacts > div:nth-child(2n) { border-right: none; }
+  .ov-keyfacts > div:nth-last-child(-n+2) { border-bottom: none; }
+  .ov-keyfacts .lbl { font-family: var(--font-mono); font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.10em; }
+  .ov-keyfacts .val { font-family: var(--font-mono); font-size: 22px; font-weight: 500; margin-top: 4px; }
+  .ov-keyfacts .val .u { font-size: 11px; color: var(--fg-3); margin-left: 3px; }
+  .ov-cta { display: flex; gap: 10px; margin-top: 22px; }
+  .btn-cta {
+    background: var(--accent); color: oklch(0.15 0.01 240);
+    border: 1px solid var(--accent); padding: 12px 22px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.10em; text-transform: uppercase; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-cta:hover { filter: brightness(1.08); }
+  .btn-ghost {
+    background: transparent; color: var(--fg-1);
+    border: 1px solid var(--line); padding: 12px 22px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.10em; text-transform: uppercase; cursor: pointer;
+    text-decoration: none;
+  }
+
+  .sec { margin-top: 36px; }
+  .sec-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 1px solid var(--line-soft); padding-bottom: 10px; margin-bottom: 18px;
+  }
+  .sec-num {
+    font-family: var(--font-mono); font-size: 11px; color: var(--accent);
+    letter-spacing: 0.14em; text-transform: uppercase; margin-right: 12px;
+  }
+  .sec-zh { font-size: 22px; font-weight: 600; }
+  .sec-en { font-family: var(--font-mono); font-size: 12px; color: var(--fg-3); margin-left: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .sec-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* Workflow */
+  .pipe { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 0; align-items: stretch; }
+  .pipe-step {
+    border: 1px solid var(--line-soft); background: var(--bg-1);
+    padding: 16px; position: relative;
+  }
+  .pipe-step + .pipe-step { border-left: none; }
+  .pipe-step .stagecode { font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 0.16em; text-transform: uppercase; }
+  .pipe-step .pname { font-size: 16px; font-weight: 600; margin-top: 6px; }
+  .pipe-step .pen { font-family: var(--font-mono); font-size: 11px; color: var(--fg-3); margin-top: 2px; letter-spacing: 0.04em; }
+  .pipe-step .ptemp { font-family: var(--font-mono); font-size: 22px; font-weight: 500; margin-top: 16px; color: var(--fg-0); }
+  .pipe-step .ptemp .u { font-size: 11px; color: var(--fg-3); margin-left: 3px; }
+  .pipe-step .pmeta { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-2); margin-top: 8px; line-height: 1.6; }
+  .pipe-step::after {
+    content: '→'; position: absolute; right: -10px; top: 50%;
+    transform: translateY(-50%); width: 20px; height: 20px;
+    background: var(--bg-0); display: grid; place-items: center;
+    color: var(--accent); font-size: 14px; z-index: 2;
+  }
+  .pipe-step:last-child::after { display: none; }
+
+  /* water flow */
+  .flow {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 0;
+    border: 1px solid var(--line-soft);
+  }
+  .flow-cell {
+    padding: 14px; border-right: 1px solid var(--line-soft);
+    background: var(--bg-1); position: relative;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .flow-cell:last-child { border-right: none; }
+  .flow-cell .fcode { font-family: var(--font-mono); font-size: 9.5px; color: var(--accent); letter-spacing: 0.14em; text-transform: uppercase; }
+  .flow-cell .fzh { font-size: 14px; font-weight: 600; }
+  .flow-cell .fen { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); }
+  .flow-cell .ftemp { font-family: var(--font-mono); font-size: 18px; margin-top: 6px; }
+  .flow-cell .ftemp .u { font-size: 10px; color: var(--fg-3); margin-left: 2px; }
+  .flow-cell .fctl { font-family: var(--font-mono); font-size: 9.5px; color: var(--fg-2); margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--line-soft); }
+  .flow-cell::after {
+    content: ''; position: absolute; right: -8px; top: 50%;
+    width: 16px; height: 1px; background: var(--accent);
+  }
+  .flow-cell::before {
+    content: ''; position: absolute; right: -10px; top: 50%;
+    transform: translateY(-50%);
+    border: 4px solid transparent; border-left-color: var(--accent);
+  }
+  .flow-cell:last-child::after, .flow-cell:last-child::before { display: none; }
+  .flow-loop {
+    margin-top: 4px; padding: 10px 14px;
+    border: 1px dashed var(--info); color: var(--info);
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    display: flex; gap: 12px; align-items: center;
+  }
+
+  /* Param table */
+  .ptbl {
+    width: 100%; border-collapse: collapse;
+    border: 1px solid var(--line-soft);
+  }
+  .ptbl th, .ptbl td {
+    padding: 12px 14px; border-bottom: 1px solid var(--line-soft);
+    text-align: left; vertical-align: top;
+  }
+  .ptbl th {
+    background: var(--bg-1); font-family: var(--font-mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.10em; color: var(--fg-3); font-weight: 500;
+  }
+  .ptbl td { font-size: 12.5px; color: var(--fg-1); }
+  .ptbl td.num { font-family: var(--font-mono); font-size: 13px; color: var(--fg-0); font-weight: 500; }
+  .ptbl tr:last-child td { border-bottom: none; }
+  .ptbl .stage-cell { display: flex; flex-direction: column; gap: 2px; }
+  .ptbl .stage-cell .zh { font-weight: 600; color: var(--fg-0); font-size: 13.5px; }
+  .ptbl .stage-cell .en { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); }
+
+  /* Cards */
+  .card-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .syscard {
+    border: 1px solid var(--line-soft); background: var(--bg-1);
+    padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .syscard .sc-head { display: flex; align-items: center; justify-content: space-between; }
+  .syscard .sc-id { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--fg-3); text-transform: uppercase; }
+  .syscard .sc-imp {
+    font-family: var(--font-mono); font-size: 9.5px; padding: 2px 6px;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    border: 1px solid var(--danger); color: var(--danger);
+  }
+  .syscard .sc-imp.med { border-color: var(--warn); color: var(--warn); }
+  .syscard .sc-zh { font-size: 16px; font-weight: 600; }
+  .syscard .sc-en { font-family: var(--font-mono); font-size: 11px; color: var(--fg-3); margin-top: -4px; }
+  .syscard .sc-desc { font-size: 12px; color: var(--fg-1); line-height: 1.6; }
+  .syscard .sc-fn { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-2); padding-top: 8px; border-top: 1px dashed var(--line-soft); }
+  .syscard .sc-fn .lbl { color: var(--fg-3); margin-right: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Gap analysis */
+  .gap-row {
+    display: grid; grid-template-columns: 200px 1fr 1fr 100px;
+    border-bottom: 1px solid var(--line-soft);
+    padding: 12px 14px; gap: 14px; align-items: center;
+  }
+  .gap-row:first-child {
+    background: var(--bg-1); padding-top: 10px; padding-bottom: 10px;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.10em; text-transform: uppercase; color: var(--fg-3);
+  }
+  .gap-row .item-zh { font-weight: 600; color: var(--fg-0); }
+  .gap-row .item-en { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); margin-top: 2px; }
+  .gap-row .ideal, .gap-row .current { font-size: 12px; color: var(--fg-1); }
+  .gap-row .current.miss { color: var(--danger); }
+  .gap-row .current.part { color: var(--warn); }
+  .gap-row .current.ok { color: var(--ok); }
+  .gap-row .stat {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px; border: 1px solid currentColor; text-align: center;
+  }
+  .gap-row .stat.ok { color: var(--ok); }
+  .gap-row .stat.part { color: var(--warn); }
+  .gap-row .stat.miss { color: var(--danger); }
+
+  /* Equipment checklist */
+  .eq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .eq-col { border: 1px solid var(--line-soft); }
+  .eq-col h3 {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--fg-2); padding: 12px 14px;
+    border-bottom: 1px solid var(--line-soft); font-weight: 600;
+  }
+  .eq-row {
+    display: grid; grid-template-columns: 18px 1fr auto;
+    padding: 8px 14px; gap: 10px; align-items: center;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 12.5px;
+  }
+  .eq-row:last-child { border-bottom: none; }
+  .eq-mark {
+    width: 16px; height: 16px; display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    border: 1px solid currentColor;
+  }
+  .eq-mark.ok   { color: var(--ok); }
+  .eq-mark.part { color: var(--warn); }
+  .eq-mark.miss { color: var(--danger); }
+  .eq-row .en { color: var(--fg-3); font-family: var(--font-mono); font-size: 10.5px; margin-left: 4px; }
+  .eq-row .meta { font-family: var(--font-mono); font-size: 10px; color: var(--fg-3); letter-spacing: 0.04em; }
+
+  /* Monitoring data list */
+  .mon-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border: 1px solid var(--line-soft); }
+  .mon-cell { padding: 14px; border-right: 1px solid var(--line-soft); }
+  .mon-cell:last-child { border-right: none; }
+  .mon-cell .mc-sym { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 0.10em; }
+  .mon-cell .mc-zh { font-size: 14px; font-weight: 600; margin-top: 4px; }
+  .mon-cell .mc-en { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); }
+  .mon-cell .mc-desc { font-size: 11.5px; color: var(--fg-1); margin-top: 8px; line-height: 1.55; }
+
+  /* Env control */
+  .env-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--line-soft); }
+  .env-cell { padding: 14px; border-right: 1px solid var(--line-soft); }
+  .env-cell:last-child { border-right: none; }
+  .env-cell .lbl { font-family: var(--font-mono); font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.10em; }
+  .env-cell .val { font-family: var(--font-mono); font-size: 18px; margin-top: 4px; }
+  .env-cell .desc { font-size: 11.5px; color: var(--fg-2); margin-top: 6px; line-height: 1.5; }
+
+  .footer-cta {
+    margin-top: 40px; padding: 24px;
+    border: 1px solid var(--accent);
+    background: linear-gradient(90deg, oklch(0.32 0.06 225 / 0.20), transparent);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-cta .ft-zh { font-size: 18px; font-weight: 600; }
+  .footer-cta .ft-en { font-family: var(--font-mono); font-size: 12px; color: var(--fg-2); margin-top: 4px; }
+
+  /* tiny topbar to anchor the page */
+  .ov-top {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--bg-1); border-bottom: 1px solid var(--line);
+    padding: 10px 32px; display: flex; align-items: center; gap: 18px;
+  }
+  .ov-top .brand-mark {
+    width: 22px; height: 22px; border: 1px solid var(--accent); position: relative;
+  }
+  .ov-top .brand-mark::before, .ov-top .brand-mark::after {
+    content: ''; position: absolute; background: var(--accent);
+  }
+  .ov-top .brand-mark::before { width: 8px; height: 1px; top: 7px; left: 6px; }
+  .ov-top .brand-mark::after  { width: 8px; height: 1px; top: 12px; left: 6px; opacity: 0.5; }
+  .ov-top .brand-zh { font-size: 12.5px; font-weight: 600; }
+  .ov-top .brand-en { font-family: var(--font-mono); font-size: 10px; color: var(--fg-3); letter-spacing: 0.10em; text-transform: uppercase; }
+  .ov-top .pill { margin-left: auto; }
+</style>
+</head>
+<body>
+
+<div class="ov-top">
+  <div class="brand-mark"></div>
+  <div>
+    <div class="brand-zh">冷水魚智慧養殖系統</div>
+    <div class="brand-en">CWA · COLD-WATER AQUACULTURE PLATFORM</div>
+  </div>
+  <span class="pill"><span class="dot"></span>系統 v4.2 · 宜蘭場區 #2</span>
+  <a class="btn-ghost" href="Aquaculture Dashboard.html">進入監控 ENTER DASHBOARD →</a>
+</div>
+
+<div class="ov">
+
+  <!-- HERO -->
+  <section class="ov-hero">
+    <div>
+      <div class="ov-eyebrow">系統總覽 · System Overview · 2026</div>
+      <h1 class="ov-title-zh">冷水魚智慧養殖系統</h1>
+      <div class="ov-title-en">Cold Water Aquaculture System for Cherry Salmon · Oncorhynchus masou</div>
+      <p class="ov-lede">
+        本系統為櫻鱒（Cherry Salmon）冷水循環式養殖之科學監控與實驗平台。
+        以多階段水溫適應流程，從孵化、稚魚、中型適應、至大型育成池，
+        透過 IoT 感測即時掌握水溫、溶氧、pH 與斃死率，
+        並長期記錄成長與飼料效率作為實驗數據。
+      </p>
+      <p class="ov-lede" style="font-family: var(--font-mono); font-size: 12px; color: var(--fg-2);">
+        Multi-stage RAS for cold-water cherry salmon. Real-time IoT telemetry
+        of temperature, DO, pH, NH₃/NO₂ across incubation → nursery → juvenile →
+        grow-out, with long-term growth and FCR data captured as experimental record.
+      </p>
+      <div class="ov-cta">
+        <a class="btn-cta" href="Aquaculture Dashboard.html">進入監控系統 Enter Dashboard →</a>
+        <a class="btn-ghost" href="#flow">查看系統設計 System Design</a>
+      </div>
+    </div>
+    <div class="ov-keyfacts">
+      <div><div class="lbl">魚池 Tanks</div><div class="val">12<span class="u">池</span></div></div>
+      <div><div class="lbl">感測器 Sensors</div><div class="val">23<span class="u">/26 IoT</span></div></div>
+      <div><div class="lbl">活魚 Live Stock</div><div class="val">56,060<span class="u">尾</span></div></div>
+      <div><div class="lbl">總生物量 Biomass</div><div class="val">6.42<span class="u">t</span></div></div>
+      <div><div class="lbl">水溫範圍 Temp Range</div><div class="val">7–13<span class="u">°C</span></div></div>
+      <div><div class="lbl">在運試驗 Experiments</div><div class="val">2<span class="u">running</span></div></div>
+    </div>
+  </section>
+
+  <!-- KEY FEATURES -->
+  <section class="sec">
+    <div class="sec-head">
+      <div><span class="sec-num">01</span><span class="sec-zh">核心特色</span><span class="sec-en">Key Features</span></div>
+      <span class="sec-meta">PLATFORM · SCOPE</span>
+    </div>
+    <div class="card-grid">
+      <div class="syscard">
+        <div class="sc-head"><span class="sc-id">F.01</span></div>
+        <div class="sc-zh">水溫控制養殖</div>
+        <div class="sc-en">Temperature-controlled Farming</div>
+        <div class="sc-desc">穩定維持 7–13°C 冷水環境，依生長階段精細調控目標溫度。</div>
+        <div class="sc-fn"><span class="lbl">Range</span>7–13°C · ±0.2°C</div>
+      </div>
+      <div class="syscard">
+        <div class="sc-head"><span class="sc-id">F.02</span></div>
+        <div class="sc-zh">高溶氧供應</div>
+        <div class="sc-en">High Dissolved Oxygen System</div>
+        <div class="sc-desc">純氧錐 + 底部曝氣，確保 DO 維持 8 mg/L 以上，提升魚隻活性與成長。</div>
+        <div class="sc-fn"><span class="lbl">Target</span>≥ 8.0 mg/L</div>
+      </div>
+      <div class="syscard">
+        <div class="sc-head"><span class="sc-id">F.03</span></div>
+        <div class="sc-zh">循環水養殖</div>
+        <div class="sc-en">Recirculating Aquaculture (RAS)</div>
+        <div class="sc-desc">95% 水體循環，配備機械、生物、紫外殺菌過濾，水耗較傳統流水式降低 90%。</div>
+        <div class="sc-fn"><span class="lbl">Reuse</span>95% · UV + Bio</div>
+      </div>
+      <div class="syscard">
+        <div class="sc-head"><span class="sc-id">F.04</span></div>
+        <div class="sc-zh">IoT 即時監控</div>
+        <div class="sc-en">IoT Real-time Monitoring</div>
+        <div class="sc-desc">Wi-Fi / BLE / MQTT 多通道接入，所有水質數據 15 秒上傳一次。</div>
+        <div class="sc-fn"><span class="lbl">Cadence</span>15s · MQTT/TLS</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKFLOW -->
+  <section class="sec">
+    <div class="sec-head">
+      <div><span class="sec-num">02</span><span class="sec-zh">養殖流程</span><span class="sec-en">Cultivation Workflow</span></div>
+      <span class="sec-meta">INCUBATION → GROW-OUT · ~14 MONTHS</span>
+    </div>
+    <div class="pipe">
+      <div class="pipe-step">
+        <div class="stagecode">STAGE 01 · INC</div>
+        <div class="pname">孵化台</div>
+        <div class="pen">Incubation Tray</div>
+        <div class="ptemp">6–8<span class="u">°C</span></div>
+        <div class="pmeta">
+          時程 30–45 天<br/>
+          DURATION 30–45d<br/>
+          —<br/>
+          受精卵孵化、卵黃囊吸收<br/>
+          Egg hatch & yolk-sac absorption
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="stagecode">STAGE 02 · NUR</div>
+        <div class="pname">小魚苗池</div>
+        <div class="pen">Nursery Tank</div>
+        <div class="ptemp">8–10<span class="u">°C</span></div>
+        <div class="pmeta">
+          時程 60–90 天<br/>
+          DURATION 60–90d<br/>
+          —<br/>
+          開口攝食、體型分篩<br/>
+          First feeding & grading
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="stagecode">STAGE 03 · JUV</div>
+        <div class="pname">中型適應池</div>
+        <div class="pen">Juvenile Tank</div>
+        <div class="ptemp">10–12<span class="u">°C</span></div>
+        <div class="pmeta">
+          時程 90–150 天<br/>
+          DURATION 90–150d<br/>
+          —<br/>
+          溫度逐步適應、成長加速<br/>
+          Temp adaptation, fast growth
+        </div>
+      </div>
+      <div class="pipe-step">
+        <div class="stagecode">STAGE 04 · GRO</div>
+        <div class="pname">大型育成池</div>
+        <div class="pen">Grow-out Tank</div>
+        <div class="ptemp">11–13<span class="u">°C</span></div>
+        <div class="pmeta">
+          時程 180–240 天<br/>
+          DURATION 180–240d<br/>
+          —<br/>
+          達上市體重 (~600g)<br/>
+          Reach market size (~600g)
+        </div>
+      </div>
+      <div></div>
+    </div>
+  </section>
+
+  <!-- WATER FLOW -->
+  <section class="sec" id="flow">
+    <div class="sec-head">
+      <div><span class="sec-num">03</span><span class="sec-zh">環境與系統設計 · 水流系統</span><span class="sec-en">Environment & System Design · Water Flow</span></div>
+      <span class="sec-meta">RAS · 95% RECIRCULATION</span>
+    </div>
+    <div class="flow">
+      <div class="flow-cell">
+        <div class="fcode">P.01</div>
+        <div class="fzh">原水</div>
+        <div class="fen">Intake</div>
+        <div class="ftemp">9.4<span class="u">°C</span></div>
+        <div class="fctl">山泉/地下水<br/>SPRING SOURCE</div>
+      </div>
+      <div class="flow-cell">
+        <div class="fcode">P.02</div>
+        <div class="fzh">過濾</div>
+        <div class="fen">Filtration</div>
+        <div class="ftemp">9.4<span class="u">°C</span></div>
+        <div class="fctl">機械 + 生物 + UV<br/>MECH · BIO · UV</div>
+      </div>
+      <div class="flow-cell">
+        <div class="fcode">P.03</div>
+        <div class="fzh">冷卻系統</div>
+        <div class="fen">Chiller</div>
+        <div class="ftemp">8.2<span class="u">°C</span></div>
+        <div class="fctl">3× 30kW 冷卻機<br/>SETPOINT 8.0°C</div>
+      </div>
+      <div class="flow-cell">
+        <div class="fcode">P.04</div>
+        <div class="fzh">穩定水槽</div>
+        <div class="fen">Buffer Tank</div>
+        <div class="ftemp">9.0<span class="u">°C</span></div>
+        <div class="fctl">純氧曝氣<br/>O₂ INJECT · 8.5 mg/L</div>
+      </div>
+      <div class="flow-cell">
+        <div class="fcode">P.05</div>
+        <div class="fzh">分配系統</div>
+        <div class="fen">Distribution</div>
+        <div class="ftemp">9.5<span class="u">°C</span></div>
+        <div class="fctl">12 × 流量計<br/>FLOWMETERS</div>
+      </div>
+      <div class="flow-cell">
+        <div class="fcode">P.06</div>
+        <div class="fzh">各魚池</div>
+        <div class="fen">Tanks</div>
+        <div class="ftemp">9–13<span class="u">°C</span></div>
+        <div class="fctl">12 池 · 4 階段<br/>12 TANKS · 4 STAGES</div>
+      </div>
+      <div class="flow-cell">
+        <div class="fcode">P.07</div>
+        <div class="fzh">回收</div>
+        <div class="fen">Recirculation</div>
+        <div class="ftemp">11.5<span class="u">°C</span></div>
+        <div class="fctl">→ 回 P.02<br/>RETURN TO FILTRATION</div>
+      </div>
+    </div>
+    <div class="flow-loop">
+      <span>↻ 循環迴路 RECIRCULATION LOOP</span>
+      <span style="margin-left: auto; color: var(--fg-2);">95% 水體回收 · 5% 補充新水</span>
+      <span style="color: var(--fg-2);">95% reuse · 5% top-up</span>
+    </div>
+  </section>
+
+  <!-- IDEAL ENV PARAMETERS -->
+  <section class="sec">
+    <div class="sec-head">
+      <div><span class="sec-num">04</span><span class="sec-zh">理想環境參數</span><span class="sec-en">Ideal Environment Parameters</span></div>
+      <span class="sec-meta">SCIENTIFIC REFERENCE · O. masou</span>
+    </div>
+    <table class="ptbl">
+      <thead>
+        <tr>
+          <th style="width: 220px;">階段 STAGE</th>
+          <th>水溫 TEMP (°C)</th>
+          <th>溶氧 DO (mg/L)</th>
+          <th>pH</th>
+          <th>NH₃</th>
+          <th>NO₂</th>
+          <th>核心目的 PURPOSE</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="stage-cell"><span class="zh">孵化台</span><span class="en">Incubation · INC</span></div></td>
+          <td class="num">6.0 – 8.0</td>
+          <td class="num">≥ 9.0</td>
+          <td class="num">7.0 – 7.4</td>
+          <td class="num">&lt; 0.02</td>
+          <td class="num">&lt; 0.05</td>
+          <td>受精卵存活、卵黃吸收 / Egg viability & yolk absorption</td>
+        </tr>
+        <tr>
+          <td><div class="stage-cell"><span class="zh">小魚苗池</span><span class="en">Nursery · NUR</span></div></td>
+          <td class="num">8.0 – 10.0</td>
+          <td class="num">≥ 8.5</td>
+          <td class="num">6.8 – 7.6</td>
+          <td class="num">&lt; 0.05</td>
+          <td class="num">&lt; 0.10</td>
+          <td>開口攝食、健全免疫 / First feeding, immunity</td>
+        </tr>
+        <tr>
+          <td><div class="stage-cell"><span class="zh">中型適應池</span><span class="en">Juvenile · JUV</span></div></td>
+          <td class="num">10.0 – 12.0</td>
+          <td class="num">≥ 8.0</td>
+          <td class="num">6.8 – 7.6</td>
+          <td class="num">&lt; 0.10</td>
+          <td class="num">&lt; 0.15</td>
+          <td>溫度適應、體型分化 / Temp adaptation, growth</td>
+        </tr>
+        <tr>
+          <td><div class="stage-cell"><span class="zh">大型育成池</span><span class="en">Grow-out · GRO</span></div></td>
+          <td class="num">11.0 – 13.0</td>
+          <td class="num">≥ 7.5</td>
+          <td class="num">6.8 – 7.8</td>
+          <td class="num">&lt; 0.10</td>
+          <td class="num">&lt; 0.20</td>
+          <td>達上市體重 / Reach market size</td>
+        </tr>
+        <tr>
+          <td><div class="stage-cell"><span class="zh" style="color: var(--danger);">致死區間</span><span class="en">Lethal Zone</span></div></td>
+          <td class="num" style="color: var(--danger);">&gt; 18.0</td>
+          <td class="num" style="color: var(--danger);">&lt; 5.0</td>
+          <td class="num" style="color: var(--danger);">&lt; 6.0 / &gt; 8.5</td>
+          <td class="num" style="color: var(--danger);">&gt; 0.30</td>
+          <td class="num" style="color: var(--danger);">&gt; 0.50</td>
+          <td style="color: var(--danger);">急性緊迫死亡 / Acute stress mortality</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- CORE SYSTEMS -->
+  <section class="sec">
+    <div class="sec-head">
+      <div><span class="sec-num">05</span><span class="sec-zh">核心系統</span><span class="sec-en">Core Systems Required</span></div>
+      <span class="sec-meta">CRITICAL INFRASTRUCTURE</span>
+    </div>
+    <div class="card-grid">
+      <div class="syscard">
+        <div class="sc-head"><span class="sc-id">SYS.01</span><span class="sc-imp">CRITICAL</span></div>
+        <div class="sc-zh">水溫控制系統</div>
+        <div class="sc-en">Temperature Control</div>
+        <div class="sc-desc">3× 30kW 冷卻機 + 板式熱交換器，全場水體 ±0.2°C 精度。</div>
+        <div class="sc-fn"><span class="lbl">FN</span>維持冷水區間，防止熱緊迫死亡 / Prevent heat stress mortality</div>
+      </div>
+      <div class="syscard">
+        <div class="sc-head"><span class="sc-id">SYS.02</span><span class="sc-imp">CRITICAL</span></div>
+        <div class="sc-zh">高溶氧系統</div>
+        <div class="sc-en">DO System</div>
+        <div class="sc-desc">純氧錐溶氧裝置 + 底部羅茨曝氣，全池 ≥ 8 mg/L。</div>
+        <div class="sc-fn"><span class="lbl">FN</span>支撐高密度養殖、緊急備援 / Support high density & emergency reserve</div>
+      </div>
+      <div class="syscard">
+        <div class="sc-head"><span class="sc-id">SYS.03</span><span class="sc-imp">CRITICAL</span></div>
+        <div class="sc-zh">循環水系統</div>
+        <div class="sc-en">RAS</div>
+        <div class="sc-desc">機械過濾 → 生物過濾 (MBBR) → UV 殺菌 → 脫氣，水體 95% 回收。</div>
+        <div class="sc-fn"><span class="lbl">FN</span>水質維持、節水、降低疾病傳播 / Quality, conservation, biosecurity</div>
+      </div>
+      <div class="syscard">
+        <div class="sc-head"><span class="sc-id">SYS.04</span><span class="sc-imp med">HIGH</span></div>
+        <div class="sc-zh">孵化設備</div>
+        <div class="sc-en">Incubation System</div>
+        <div class="sc-desc">阻流孵化盤 + 12L:12D 光照控制 + 8°C 恆溫水源。</div>
+        <div class="sc-fn"><span class="lbl">FN</span>提升孵化率與卵黃吸收 / Higher hatch rate & yolk absorption</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAP ANALYSIS -->
+  <section class="sec">
+    <div class="sec-head">
+      <div><span class="sec-num">06</span><span class="sec-zh">現況差距分析</span><span class="sec-en">Current vs Ideal · Gap Analysis</span></div>
+      <span class="sec-meta">SITE: 宜蘭 #2 · YILAN-02</span>
+    </div>
+    <div style="border: 1px solid var(--line-soft);">
+      <div class="gap-row">
+        <span>項目 ITEM</span>
+        <span>理想 IDEAL</span>
+        <span>現況 CURRENT</span>
+        <span>狀態 STATUS</span>
+      </div>
+      <div class="gap-row">
+        <div><div class="item-zh">水溫控制系統</div><div class="item-en">Temperature Control</div></div>
+        <div class="ideal">3× chiller, ±0.2°C 全場</div>
+        <div class="current part">2× chiller 運轉, B 區 ±0.5°C</div>
+        <div class="stat part">⚠ 部分 PARTIAL</div>
+      </div>
+      <div class="gap-row">
+        <div><div class="item-zh">高溶氧系統</div><div class="item-en">DO System</div></div>
+        <div class="ideal">純氧錐 + 曝氣，全池 ≥ 8 mg/L</div>
+        <div class="current part">A 區純氧錐, B 區僅曝氣</div>
+        <div class="stat part">⚠ 部分 PARTIAL</div>
+      </div>
+      <div class="gap-row">
+        <div><div class="item-zh">循環水系統 RAS</div><div class="item-en">Recirculation</div></div>
+        <div class="ideal">95% 回收, MBBR + UV</div>
+        <div class="current ok">已完成 · 92% 實測回收率</div>
+        <div class="stat ok">✔ 完整 OK</div>
+      </div>
+      <div class="gap-row">
+        <div><div class="item-zh">水質感測器</div><div class="item-en">Water Quality Sensors</div></div>
+        <div class="ideal">每池 6 種 (Temp/DO/pH/NH₃/NO₂/Flow)</div>
+        <div class="current part">每池 2–4 種, NH₃/NO₂ 多為人工</div>
+        <div class="stat part">⚠ 部分 PARTIAL</div>
+      </div>
+      <div class="gap-row">
+        <div><div class="item-zh">孵化光週期控制</div><div class="item-en">Photoperiod Control</div></div>
+        <div class="ideal">可程式化 12L:12D</div>
+        <div class="current miss">手動定時器</div>
+        <div class="stat miss">✕ 缺少 MISSING</div>
+      </div>
+      <div class="gap-row">
+        <div><div class="item-zh">緊急備電</div><div class="item-en">Backup Power</div></div>
+        <div class="ideal">UPS + 柴油發電 4 小時</div>
+        <div class="current ok">UPS 30 分 + 60kW 發電 6 小時</div>
+        <div class="stat ok">✔ 完整 OK</div>
+      </div>
+      <div class="gap-row">
+        <div><div class="item-zh">IoT 上傳閘道</div><div class="item-en">IoT Gateway</div></div>
+        <div class="ideal">全場 5 閘道 + MQTT/TLS</div>
+        <div class="current part">4/5 在線 · C/Q 區降級</div>
+        <div class="stat part">⚠ 部分 PARTIAL</div>
+      </div>
+      <div class="gap-row">
+        <div><div class="item-zh">氨氮自動感測</div><div class="item-en">NH₃/NO₂ Auto Sensor</div></div>
+        <div class="ideal">在線比色式感測</div>
+        <div class="current miss">每日人工試劑檢測</div>
+        <div class="stat miss">✕ 缺少 MISSING</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EQUIPMENT CHECKLIST -->
+  <section class="sec">
+    <div class="sec-head">
+      <div><span class="sec-num">07</span><span class="sec-zh">現有設備清單</span><span class="sec-en">Current Equipment Inventory</span></div>
+      <span class="sec-meta">CHECKLIST</span>
+    </div>
+    <div class="eq-grid">
+      <div class="eq-col">
+        <h3>魚池與基礎設施 · TANKS & INFRASTRUCTURE</h3>
+        <div class="eq-row"><span class="eq-mark ok">✓</span><span>4× 小魚苗池 A1–A4 <span class="en">Nursery</span></span><span class="meta">2m³ · FRP</span></div>
+        <div class="eq-row"><span class="eq-mark ok">✓</span><span>4× 大型育成池 B1–B4 <span class="en">Grow-out</span></span><span class="meta">12m³ · 混凝土</span></div>
+        <div class="eq-row"><span class="eq-mark ok">✓</span><span>2× 親魚池 C1–C2 <span class="en">Broodstock</span></span><span class="meta">6m³ · FRP</span></div>
+        <div class="eq-row"><span class="eq-mark ok">✓</span><span>2× 檢疫池 Q1–Q2 <span class="en">Quarantine</span></span><span class="meta">隔離 ISOLATED</span></div>
+        <div class="eq-row"><span class="eq-mark part">~</span><span>4× 中型適應池 J1–J4 <span class="en">Juvenile</span></span><span class="meta">3 已建 · 1 規劃中</span></div>
+        <div class="eq-row"><span class="eq-mark miss">✕</span><span>專屬孵化室 <span class="en">Hatchery Room</span></span><span class="meta">與 NUR 共用空間</span></div>
+      </div>
+      <div class="eq-col">
+        <h3>感測與設備 · SENSORS & EQUIPMENT</h3>
+        <div class="eq-row"><span class="eq-mark ok">✓</span><span>水溫感測器 <span class="en">Temp Sensors</span></span><span class="meta">11/12 池 · Wi-Fi</span></div>
+        <div class="eq-row"><span class="eq-mark ok">✓</span><span>溶氧感測器 <span class="en">DO Sensors</span></span><span class="meta">10/12 池 · Wi-Fi</span></div>
+        <div class="eq-row"><span class="eq-mark part">~</span><span>pH 感測器 <span class="en">pH Sensors</span></span><span class="meta">4/12 池 · BLE GW</span></div>
+        <div class="eq-row"><span class="eq-mark miss">✕</span><span>氨氮 NH₃ 感測器 <span class="en">Ammonia</span></span><span class="meta">人工 MANUAL</span></div>
+        <div class="eq-row"><span class="eq-mark miss">✕</span><span>亞硝酸 NO₂ 感測器 <span class="en">Nitrite</span></span><span class="meta">人工 MANUAL</span></div>
+        <div class="eq-row"><span class="eq-mark ok">✓</span><span>冷卻機 <span class="en">Chillers</span></span><span class="meta">3/3 在線 · 30kW each</span></div>
+        <div class="eq-row"><span class="eq-mark part">~</span><span>純氧供應系統 <span class="en">O₂ System</span></span><span class="meta">A 區 · B 區僅曝氣</span></div>
+        <div class="eq-row"><span class="eq-mark part">~</span><span>UV 殺菌燈 <span class="en">UV Sterilizer</span></span><span class="meta">1/2 在線 · 1 待換</span></div>
+        <div class="eq-row"><span class="eq-mark ok">✓</span><span>緊急發電 <span class="en">Backup Generator</span></span><span class="meta">60kW 柴油</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MONITORED PARAMETERS -->
+  <section class="sec">
+    <div class="sec-head">
+      <div><span class="sec-num">08</span><span class="sec-zh">監測項目</span><span class="sec-en">Monitored Parameters</span></div>
+      <span class="sec-meta">LONG-TERM EXPERIMENTAL DATASET</span>
+    </div>
+    <div class="mon-grid">
+      <div class="mon-cell">
+        <div class="mc-sym">M.01 · TEMP</div>
+        <div class="mc-zh">水溫</div>
+        <div class="mc-en">Water Temperature</div>
+        <div class="mc-desc">每 15 秒上傳，分析日內波動與冷卻機效能。</div>
+      </div>
+      <div class="mon-cell">
+        <div class="mc-sym">M.02 · DO</div>
+        <div class="mc-zh">溶氧</div>
+        <div class="mc-en">Dissolved Oxygen</div>
+        <div class="mc-desc">魚隻代謝關鍵指標，&lt; 6 mg/L 觸發緊急曝氣。</div>
+      </div>
+      <div class="mon-cell">
+        <div class="mc-sym">M.03 · pH</div>
+        <div class="mc-zh">酸鹼值</div>
+        <div class="mc-en">pH</div>
+        <div class="mc-desc">監控生物濾池硝化效能與飼料代謝物影響。</div>
+      </div>
+      <div class="mon-cell">
+        <div class="mc-sym">M.04 · NH₃ / NO₂</div>
+        <div class="mc-zh">氨氮 / 亞硝酸</div>
+        <div class="mc-en">Ammonia / Nitrite</div>
+        <div class="mc-desc">RAS 系統毒性指標，目前以人工試劑每日檢測。</div>
+      </div>
+      <div class="mon-cell">
+        <div class="mc-sym">M.05 · GROWTH</div>
+        <div class="mc-zh">魚隻成長</div>
+        <div class="mc-en">Fish Growth</div>
+        <div class="mc-desc">每週採樣量測 SGR、FCR、體長體重，作為實驗結果。</div>
+      </div>
+    </div>
+    <div style="margin-top: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-2); padding: 12px 14px; border-left: 2px solid var(--accent); background: var(--bg-1);">
+      ⓘ 本系統長期紀錄上述參數作為實驗數據集，
+      支援溫度適應、光週期、飼料粒徑等對照試驗。<br/>
+      <span style="color: var(--fg-3);">All parameters retained as long-term experimental dataset for adaptation, photoperiod, and feed-size trials.</span>
+    </div>
+  </section>
+
+  <!-- ENVIRONMENT CONTROL -->
+  <section class="sec">
+    <div class="sec-head">
+      <div><span class="sec-num">09</span><span class="sec-zh">環境控制條件</span><span class="sec-en">Environmental Control</span></div>
+      <span class="sec-meta">FACILITY-LEVEL · STABILITY</span>
+    </div>
+    <div class="env-row">
+      <div class="env-cell">
+        <div class="lbl">外氣溫 AMB. TEMP</div>
+        <div class="val">18 – 24<span style="font-size: 10px; color: var(--fg-3); margin-left: 3px;">°C</span></div>
+        <div class="desc">廠房 HVAC 維持，避免日夜大幅震盪影響水溫。</div>
+      </div>
+      <div class="env-cell">
+        <div class="lbl">光照控制 LIGHT</div>
+        <div class="val">12L : 12D</div>
+        <div class="desc">孵化與稚魚區光週期可程式化；育成區自然光 + 遮蔽。</div>
+      </div>
+      <div class="env-cell">
+        <div class="lbl">緊急備電 BACKUP</div>
+        <div class="val">UPS + 60kW</div>
+        <div class="desc">UPS 30 分鐘無縫切換 + 柴油發電 6 小時持續運轉。</div>
+      </div>
+      <div class="env-cell">
+        <div class="lbl">穩定要求 STABILITY</div>
+        <div class="val">±0.2 °C / 24h</div>
+        <div class="desc">場區水溫波動上限，超出觸發 SCADA 警報並紀錄事件。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER CTA -->
+  <div class="footer-cta">
+    <div>
+      <div class="ft-zh">準備就緒 · 進入即時監控</div>
+      <div class="ft-en">SYSTEM READY · ENTER REAL-TIME MONITORING</div>
+    </div>
+    <a class="btn-cta" href="Aquaculture Dashboard.html">進入監控系統 Enter Dashboard →</a>
+  </div>
+
+</div>
+
+</body>
+</html>
